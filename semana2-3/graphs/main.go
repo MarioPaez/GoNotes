@@ -170,4 +170,5 @@ func main() {
 	grafo.RemoveVertex(2)
 	fmt.Println("Vecinos del vertice 2: ", grafo.GetNeightbours(2))
 	fmt.Println("Vecinos del vertice 1: ", grafo.GetNeightbours(1))
+
 }
