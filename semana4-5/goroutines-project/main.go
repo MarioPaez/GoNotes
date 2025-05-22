@@ -1,24 +1,49 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 type Task struct {
 	ID    int
 	Input string
 }
 
-func createNTasks(n int) []Task {
-	res := make([]Task, 0)
-	for i := range n {
-		res = append(res, Task{ID: i, Input: CreateRandomString()})
+func createNTasks(id int) Task {
+	return Task{ID: id, Input: CreateRandomString()}
+}
+
+// Fan-out
+func worker(id int, tasks <-chan Task, wg *sync.WaitGroup) {
+	defer wg.Done()
+	count := 0
+
+	for range tasks {
+		//fmt.Printf("Worker %d procesando tarea %d\n", id, task.ID)
+		count++
+		//time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 	}
-	return res
+	fmt.Printf("El worker con id %d ha consumido un total de %d tareas\n", id, count)
 }
 
 func main() {
+	numTasks := 1000
+	numWorkers := 5
 
-	tasks := createNTasks(1000)
+	tasks := make(chan Task)
+	var wg sync.WaitGroup
 
-	fmt.Println("Tareas que hay que hacer: ", tasks)
+	for i := range numWorkers {
+		wg.Add(1)
+		go worker(i, tasks, &wg)
+	}
 
+	for i := range numTasks {
+		tasks <- createNTasks(i)
+	}
+	close(tasks)
+	wg.Wait()
+
+	fmt.Println("Todas las tareas han sido procesadas")
 }
