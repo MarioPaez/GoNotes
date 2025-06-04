@@ -1,6 +1,9 @@
 package integers
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestAdder(t *testing.T) {
 	t.Run("Test suma", func(t *testing.T) {
@@ -12,4 +15,16 @@ func TestAdder(t *testing.T) {
 		}
 
 	})
+}
+
+func ExampleAdd() {
+	sum := Add(9, 7)
+	fmt.Println(sum)
+	//Output: 16
+}
+
+func ExampleAdd_second() {
+	sum := Add(9, 7)
+	sum2 := Add(sum, 10)
+	fmt.Println(sum2)
 }
