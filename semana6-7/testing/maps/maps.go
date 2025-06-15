@@ -40,3 +40,12 @@ func (d Dictionary) Update(word, newDefinition string) error {
 	d[word] = newDefinition
 	return nil
 }
+
+func (d Dictionary) Delete(word string) error {
+	_, ok := d[word]
+	if !ok {
+		return ErrWordDoesNotExist
+	}
+	delete(d, word)
+	return nil
+}
