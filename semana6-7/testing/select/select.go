@@ -1,6 +1,7 @@
 package selectTdd
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -19,20 +20,32 @@ var Urls = []string{
 }
 
 // Probar a realizar un Racer de un array de urls de entrada
-func Racer(url1, url2 string) string {
-	timeA := time.Now()
-	http.Get(url1)
-	totalA := time.Since(timeA)
+var tenSecondTimeout = 10 * time.Second
 
-	timeB := time.Now()
-	http.Get(url2)
-	totalB := time.Since(timeB)
-	if totalA > totalB {
-		return url2
+func Racer(a, b string) (winner string, error error) {
+	return ConfigurableRacer(a, b, tenSecondTimeout)
+}
+
+func ConfigurableRacer(a, b string, timeout time.Duration) (winner string, error error) {
+	select {
+	case <-ping(a):
+		return a, nil
+	case <-ping(b):
+		return b, nil
+	case <-time.After(timeout):
+		return "", fmt.Errorf("timed out waiting for %s and %s", a, b)
 	}
-	return url1
+}
+
+func ping(url string) chan struct{} {
+	ch := make(chan struct{})
+	go func() {
+		http.Get(url)
+		close(ch)
+	}()
+	return ch
 }
 
 /*
-1. Vamos a realizar lo mínimo y lo más sencillo para que el test pase, luego viene el refactor y hacerlo más rápido.
+1. Vamos a realizar lo mínimo y lo más sencillo para que el test pase, luego viene el refactor y hacerlo más eficiente.
 */
