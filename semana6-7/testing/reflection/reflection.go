@@ -1,30 +1,31 @@
 package reflection
 
 import (
-	"fmt"
 	"reflect"
 )
 
 func walk(x any, fn func(input string)) {
-	val := newFunction(x)
+	val := calculateVal(x)
 
-	fmt.Println("valor de numField: ", val.NumField())
-	for i := range val.NumField() {
-		field := val.Field(i)
-
-		switch field.Kind() {
-		case reflect.String:
-			fn(field.String())
-		case reflect.Struct:
-			walk(field.Interface(), fn)
+	switch val.Kind() {
+	case reflect.Struct:
+		for i := range val.NumField() {
+			walk(val.Field(i).Interface(), fn)
 		}
+	case reflect.Slice:
+		for i := range val.Len() {
+			walk(val.Index(i).Interface(), fn)
+		}
+	case reflect.String:
+		fn(val.String())
 	}
 }
 
-func newFunction(x any) reflect.Value {
-	val := reflect.ValueOf(x)
+func calculateVal(x any) reflect.Value {
+	val := reflect.ValueOf(x) // Nos da el valor del tipo.
 	if val.Kind() == reflect.Pointer {
 		val = val.Elem()
 	}
+
 	return val
 }
