@@ -4,25 +4,46 @@ import (
 	"reflect"
 )
 
-func walk(x any, fn func(input string)) {
+func walk(x interface{}, fn func(input string)) {
 	val := calculateVal(x)
 
+	walkValue := func(value reflect.Value) {
+		walk(value.Interface(), fn)
+	}
+
 	switch val.Kind() {
-	case reflect.Struct:
-		for i := range val.NumField() {
-			walk(val.Field(i).Interface(), fn)
-		}
-	case reflect.Slice:
-		for i := range val.Len() {
-			walk(val.Index(i).Interface(), fn)
-		}
 	case reflect.String:
 		fn(val.String())
+	case reflect.Struct:
+		for i := 0; i < val.NumField(); i++ {
+			walkValue(val.Field(i))
+		}
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < val.Len(); i++ {
+			walkValue(val.Index(i))
+		}
+	case reflect.Map:
+		for _, key := range val.MapKeys() {
+			walkValue(val.MapIndex(key))
+		}
+	case reflect.Chan:
+		for {
+			if v, ok := val.Recv(); ok {
+				walkValue(v)
+			} else {
+				break
+			}
+		}
+	case reflect.Func:
+		valFnResult := val.Call(nil)
+		for _, res := range valFnResult {
+			walkValue(res)
+		}
 	}
 }
 
 func calculateVal(x any) reflect.Value {
-	val := reflect.ValueOf(x) // Nos da el valor del tipo.
+	val := reflect.ValueOf(x) // Nos da el valor y a parte tiene métodos para obtener el Type también.
 	if val.Kind() == reflect.Pointer {
 		val = val.Elem()
 	}
